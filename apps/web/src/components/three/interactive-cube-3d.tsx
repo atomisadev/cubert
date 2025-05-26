@@ -15,39 +15,6 @@ const STICKER_SIZE = 0.95;
 const CUBELET_SIZE = 1;
 const GAP = 0.05;
 
-function createFaceTexture(faceColors: ColorValue[]): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  const TILE_DIM = 32;
-  const FACE_DIM = TILE_DIM * 3;
-  canvas.width = FACE_DIM;
-  canvas.height = FACE_DIM;
-  const context = canvas.getContext("2d");
-
-  if (!context) {
-    context!.fillRect(0, 0, FACE_DIM, FACE_DIM);
-    return new THREE.CanvasTexture(canvas);
-  }
-
-  context.fillStyle = "#202020";
-  context.fillRect(0, 0, FACE_DIM, FACE_DIM);
-
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      context.fillStyle = faceColors[i * 3 + j];
-      context.fillRect(
-        j * TILE_DIM + (TILE_DIM * (1 - STICKER_SIZE)) / 2,
-        i * TILE_DIM + (TILE_DIM * (1 - STICKER_SIZE)) / 2,
-        TILE_DIM * STICKER_SIZE,
-        TILE_DIM * STICKER_SIZE
-      );
-    }
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
-
 interface CubePieceProps {
   position: [number, number, number];
   colors: (ColorValue | null)[];
@@ -84,23 +51,28 @@ interface RubiksCubeProps {
 function RubiksCube({ cubeState }: RubiksCubeProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
-  useFrame((_state, delta) => {
-    // if (groupRef.current) {
-    //   groupRef.current.rotation.y += delta * 0.1;
-    //   groupRef.current.rotation.x += delta * 0.05;
-    // }
-  });
+  // Optional: add rotation for demonstration
+  // useFrame((_state, delta) => {
+  //   if (groupRef.current) {
+  //     groupRef.current.rotation.y += delta * 0.05;
+  //     groupRef.current.rotation.x += delta * 0.02;
+  //   }
+  // });
 
   const cubelets = useMemo(() => {
     const pieces = [];
-    const N = 3; // 3x3x3
+    const N = 3;
     const offset = (N - 1) / 2;
 
     for (let x = 0; x < N; x++) {
+      // Iterates from "left" to "right" in model space
       for (let y = 0; y < N; y++) {
+        // Iterates from "bottom" to "top" in model space
         for (let z = 0; z < N; z++) {
+          // Iterates from "back" to "front" in model space
+
           if (x > 0 && x < N - 1 && y > 0 && y < N - 1 && z > 0 && z < N - 1) {
-            continue;
+            continue; // Skip internal piece
           }
 
           const pos: [number, number, number] = [
@@ -117,17 +89,52 @@ function RubiksCube({ cubeState }: RubiksCubeProps) {
             null,
             null,
           ];
+          // Material order for BoxGeometry: Right (+X), Left (-X), Top (+Y), Bottom (-Y), Front (+Z), Back (-Z)
 
-          if (x === N - 1) pieceColors[0] = cubeState.R[y * 3 + (N - 1 - z)];
-          if (x === 0) pieceColors[1] = cubeState.L[y * 3 + z];
+          // For each face, we want 2D array row 0 to be the "top" row of the 3D face.
+          // 2D array index: row * N + col.
+          // (N-1-y_on_face_coord) for row index to flip from 3D bottom-up (y) to 2D top-down.
 
-          // Y faces (U, D)
-          if (y === N - 1) pieceColors[2] = cubeState.U[(N - 1 - z) * 3 + x];
-          if (y === 0) pieceColors[3] = cubeState.D[z * 3 + x];
-
-          // Z faces (F, B)
-          if (z === N - 1) pieceColors[4] = cubeState.F[y * 3 + x];
-          if (z === 0) pieceColors[5] = cubeState.B[y * 3 + (N - 1 - x)];
+          // Right Face (+X), when x = N-1
+          if (x === N - 1) {
+            // y is vertical (0=bottom, N-1=top), z is depth (0=back, N-1=front on this face)
+            // 2D row should be (N-1-y), 2D col should be z
+            pieceColors[0] = cubeState.R[(N - 1 - y) * N + z];
+          }
+          // Left Face (-X), when x = 0
+          if (x === 0) {
+            // y is vertical (0=bottom, N-1=top), z is depth (0=back on this face, N-1=front)
+            // For L face, viewed from outside, (N-1-z) maps 3D front to 2D left-col
+            // 2D row (N-1-y), 2D col (N-1-z)
+            pieceColors[1] = cubeState.L[(N - 1 - y) * N + (N - 1 - z)];
+          }
+          // Top Face (+Y), when y = N-1
+          if (y === N - 1) {
+            // z is depth "down" the face (0=back, N-1=front), x is horizontal
+            // 2D row should be z (to map 2D top row (idx 0) to 3D back row (z=0))
+            // 2D col should be x
+            pieceColors[2] = cubeState.U[z * N + x];
+          }
+          // Bottom Face (-Y), when y = 0
+          if (y === 0) {
+            // z is depth "up" the face (0=back, N-1=front), x is horizontal
+            // 2D row should be (N-1-z) (to map 2D top row (idx 0) to 3D front row (z=N-1))
+            // 2D col should be x
+            pieceColors[3] = cubeState.D[(N - 1 - z) * N + x];
+          }
+          // Front Face (+Z), when z = N-1
+          if (z === N - 1) {
+            // y is vertical (0=bottom, N-1=top), x is horizontal
+            // 2D row (N-1-y), 2D col x
+            pieceColors[4] = cubeState.F[(N - 1 - y) * N + x];
+          }
+          // Back Face (-Z), when z = 0
+          if (z === 0) {
+            // y is vertical (0=bottom, N-1=top), x is horizontal (0=left, N-1=right on this face)
+            // For B face, viewed from outside, (N-1-x) maps 3D right to 2D left-col
+            // 2D row (N-1-y), 2D col (N-1-x)
+            pieceColors[5] = cubeState.B[(N - 1 - y) * N + (N - 1 - x)];
+          }
 
           pieces.push({
             id: `${x}-${y}-${z}`,
@@ -169,16 +176,26 @@ export default function InteractiveCube3D({
         "w-full h-64 sm:h-96 md:h-[500px] bg-muted rounded-lg shadow-xl"
       }
     >
-      <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
-        <ambientLight intensity={Math.PI / 1.5} />
-        <pointLight position={[10, 10, 10]} decay={0} intensity={Math.PI} />
+      <Canvas camera={{ position: [4, 3, 5], fov: 50 }}>
+        {" "}
+        {/* Adjusted camera for better initial view */}
+        <ambientLight intensity={Math.PI / 1.2} />
         <spotLight
-          position={[-10, -10, -10]}
-          angle={0.15}
+          position={[10, 10, 10]}
+          angle={0.3}
           penumbra={1}
           decay={0}
-          intensity={Math.PI}
+          intensity={Math.PI * 0.8}
+          castShadow
         />
+        <spotLight
+          position={[-10, -10, -10]}
+          angle={0.3}
+          penumbra={1}
+          decay={0}
+          intensity={Math.PI * 0.3}
+        />
+        <pointLight position={[0, 5, 0]} intensity={Math.PI * 0.2} />
         <RubiksCube cubeState={cubeState} />
         <OrbitControls enableZoom={true} enablePan={true} />
       </Canvas>
