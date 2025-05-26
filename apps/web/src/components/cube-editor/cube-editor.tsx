@@ -11,7 +11,7 @@ import {
   RUBIKS_COLORS,
 } from "@/lib/cube-constants";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; // Assuming you want to use your shared Button
+import { Button } from "@/components/ui/button";
 
 interface CubeEditorProps {
   initialState?: CubeState;
@@ -30,7 +30,7 @@ export function CubeEditor({
   );
 
   const handleStickerClick = (face: FaceName, stickerIndex: number) => {
-    if (!selectedColor) return; // No color selected from palette
+    if (!selectedColor) return;
 
     const newFaceColors = [...cubeState[face]];
     newFaceColors[stickerIndex] = selectedColor;
