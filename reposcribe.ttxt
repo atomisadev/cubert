@@ -1,0 +1,63 @@
+Project Directory: /home/ubuntu/cubert
+Output File: /home/ubuntu/cubert/reposcribe.ttxt
+Date: 2025-05-26T02:42:15.330Z
+
+File Tree:
+cubert/
+├── package.json
+├── bun.lock
+├── .gitignore
+├── packages/
+│   ├── ui/
+│   │   ├── src/
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   └── code.tsx
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── turbo/
+│   │   │   └── generators/
+│   │   │       ├── templates/
+│   │   │       │   └── component.hbs
+│   │   │       └── config.ts
+│   │   └── eslint.config.mjs
+│   ├── eslint-config/
+│   │   ├── package.json
+│   │   ├── base.js
+│   │   ├── react-internal.js
+│   │   ├── next.js
+│   │   └── README.md
+│   └── typescript-config/
+│       ├── package.json
+│       ├── nextjs.json
+│       ├── react-library.json
+│       └── base.json
+├── apps/
+│   └── web/
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── globals.css
+│       │   │   ├── page.tsx
+│       │   │   ├── favicon.ico
+│       │   │   └── layout.tsx
+│       │   └── lib/
+│       │       └── utils.ts
+│       ├── package.json
+│       ├── components.json
+│       ├── .gitignore
+│       ├── tsconfig.json
+│       ├── next.config.ts
+│       ├── eslint.config.mjs
+│       ├── next-env.d.ts
+│       ├── public/
+│       │   ├── next.svg
+│       │   ├── file.svg
+│       │   ├── window.svg
+│       │   ├── vercel.svg
+│       │   └── globe.svg
+│       ├── postcss.config.mjs
+│       └── README.md
+├── .npmrc
+├── README.md
+└── turbo.json
+
