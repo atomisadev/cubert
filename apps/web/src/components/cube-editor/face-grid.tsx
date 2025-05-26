@@ -13,6 +13,7 @@ export function FaceGrid({
   onStickerClick,
   className,
 }: FaceGridProps) {
+  const MIDDLE_STICKER_INDEX = 4;
   return (
     <div
       className={cn(
@@ -25,6 +26,7 @@ export function FaceGrid({
           key={index}
           color={color}
           onClick={() => onStickerClick(index)}
+          isCenter={index === MIDDLE_STICKER_INDEX}
         />
       ))}
     </div>
