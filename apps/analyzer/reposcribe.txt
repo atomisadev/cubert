@@ -1,0 +1,603 @@
+Project Directory: /home/ubuntu/cubert/apps/analyzer
+Output File: /home/ubuntu/cubert/apps/analyzer/reposcribe.txt
+Date: 2025-05-28T00:51:59.874Z
+
+File Tree:
+analyzer/
+├── package.json
+├── main.py
+├── requirements.txt
+├── .gitignore
+├── image_utils.py
+├── visualization_utils.py
+├── face_analyzer.py
+├── color_analyzer.py
+├── detection_utils.py
+├── config.py
+└── cube_state_builder.py
+
+
+
+--- File Contents ---
+
+-------------------- package.json (path: package.json) --------------------
+{
+  "name": "analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "echo \"No linting configured for analyzer yet\"",
+    "analyze-cube": "python3 main.py",
+    "setup": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
+    "clean-debug": "rm -rf ./debug_output/*"
+  }
+}
+-------------------- END package.json --------------------
+
+-------------------- main.py (path: main.py) --------------------
+# rubiks_analyzer/main.py
+import os
+import json # For pretty printing results
+import cv2 # For dummy image creation
+import numpy as np # For dummy image creation
+
+# Important: Ensure these imports work based on your project structure.
+# If running main.py directly from rubiks_analyzer folder, these should be:
+from config import AnalysisConfig
+from face_analyzer import SingleFaceAnalyzer
+from cube_state_builder import CubeStateBuilder
+from image_utils import ImageSaver # For dummy image creation
+
+def create_dummy_input_images(config: AnalysisConfig):
+    """Creates dummy images in the input folder if they don't exist."""
+    os.makedirs(config.INPUT_IMAGE_DIR, exist_ok=True)
+    
+    # BGR colors for dummy centers
+    dummy_center_colors_bgr = {
+        "W": (230, 230, 230), "Y": (0, 230, 230),
+        "R": (0, 0, 230),   "O": (0, 100, 255),
+        "B": (230, 100, 0), "G": (0, 180, 0),
+        "X": (128, 128, 128) # Unknown
+    }
+
+    for logical_face, info in config.EXPECTED_FACE_INFO.items():
+        filename = f"{info['filename_stem']}{config.IMAGE_EXTENSION}"
+        filepath = os.path.join(config.INPUT_IMAGE_DIR, filename)
+        
+        if not os.path.exists(filepath):
+            print(f"Creating dummy image: {filepath}")
+            img_size = 300
+            dummy_img = np.full((img_size, img_size, 3), (60, 60, 60), dtype=np.uint8) # Dark gray bg
+            
+            center_char = info["expected_center_char"]
+            center_color_bgr = dummy_center_colors_bgr.get(center_char, dummy_center_colors_bgr["X"])
+
+            # Draw a large "face"
+            cv2.rectangle(dummy_img, (30,30), (img_size-30, img_size-30), (100,100,100), -1)
+
+            # Draw 9 "stickers" - make center one the expected color
+            s_size = (img_size - 60 - 20) // 3 # 20 for 2 gaps
+            gap = 10
+            offset = 30
+            
+            for r in range(3):
+                for c in range(3):
+                    x1 = offset + c * (s_size + gap)
+                    y1 = offset + r * (s_size + gap)
+                    sticker_color = (np.random.randint(0,256), np.random.randint(0,256), np.random.randint(0,256))
+                    if r == 1 and c == 1: # Center sticker
+                        sticker_color = center_color_bgr
+                    cv2.rectangle(dummy_img, (x1,y1), (x1+s_size, y1+s_size), sticker_color, -1)
+            ImageSaver.save(dummy_img, config.INPUT_IMAGE_DIR, filename)
+
+
+if __name__ == "__main__":
+    config = AnalysisConfig()
+    
+    # Create dummy input images if they don't exist (for testing)
+    create_dummy_input_images(config)
+
+    face_analyzer = SingleFaceAnalyzer(config)
+    cube_builder = CubeStateBuilder(config)
+
+    print("Starting Rubik's Cube Face Analysis...")
+    print(f"Reading images from: {config.INPUT_IMAGE_DIR}")
+    print(f"Debug output will be in: {config.DEBUG_OUTPUT_DIR}\n")
+
+    processed_face_count = 0
+    for logical_face_key, face_info in config.EXPECTED_FACE_INFO.items():
+        image_filename = f"{face_info['filename_stem']}{config.IMAGE_EXTENSION}"
+        image_path = os.path.join(config.INPUT_IMAGE_DIR, image_filename)
+
+        print(f"--- Analyzing {logical_face_key}-face ({image_filename}) ---")
+        
+        if not os.path.exists(image_path):
+            print(f"ERROR: Image not found: {image_path}. Marking as unprocessed.")
+            cube_builder.set_face_as_unprocessed(logical_face_key)
+            print("--------------------------------------\n")
+            continue
+
+        analysis_result = face_analyzer.analyze(image_path)
+
+        if analysis_result.get("error"):
+            print(f"Error during analysis: {analysis_result['error']}")
+            cube_builder.set_face_as_unprocessed(logical_face_key)
+        else:
+            print(f"  Detected Center: {analysis_result['center_color_char']}")
+            print(f"  Grid Colors:")
+            for row in analysis_result['grid_colors']:
+                print(f"    {row}")
+            
+            # Verify detected center against expected, if desired
+            if analysis_result['center_color_char'] != face_info['expected_center_char'] and \
+               analysis_result['center_color_char'] != config.UNKNOWN_COLOR_CHAR:
+                print(f"  WARNING: Center color mismatch! Expected {face_info['expected_center_char']}, got {analysis_result['center_color_char']}.")
+                # Decide on handling: either use detected or mark error. For now, we'll use the detected.
+            
+            cube_builder.add_face_data(logical_face_key, analysis_result['grid_colors'])
+            processed_face_count +=1
+        
+        if analysis_result.get("debug_image_path"):
+            print(f"  Debug image: {analysis_result['debug_image_path']}")
+        print("--------------------------------------\n")
+
+    print("=== Cube State Construction ===")
+    if processed_face_count < 6:
+        print(f"Warning: Only {processed_face_count} out of 6 faces were successfully processed.")
+        
+    final_cube_string = cube_builder.get_cube_string()
+    print(f"\nFinal 54-character Cube State String (URFDLB order):")
+    print(final_cube_string)
+
+    # Example of how to view the string grouped by faces (9 chars per face)
+    if len(final_cube_string) == 54:
+        print("\nCube String by Face:")
+        for i, face_key in enumerate(config.FACE_ORDER_FOR_CUBE_STRING):
+            start = i * 9
+            end = start + 9
+            face_str = final_cube_string[start:end]
+            print(f"  {face_key}-face: {face_str[:3]} {face_str[3:6]} {face_str[6:]}")
+    else:
+        print(f"Error: Final cube string length is {len(final_cube_string)}, expected 54.")
+
+    print("\nAnalysis complete.")
+-------------------- END main.py --------------------
+
+-------------------- requirements.txt (path: requirements.txt) --------------------
+numpy==2.2.6
+opencv-python==4.11.0.86
+-------------------- END requirements.txt --------------------
+
+-------------------- .gitignore (path: .gitignore) --------------------
+input_images/
+.venv/
+.turbo/
+-------------------- END .gitignore --------------------
+
+-------------------- image_utils.py (path: image_utils.py) --------------------
+import cv2
+import numpy as np
+import os
+import pathlib
+from .config import AnalysisConfig
+
+class ImageLoader:
+    @staticmethod
+    def load(image_path: str) -> np.ndarray | None:
+        if not os.path.exists(image_path):
+            print(f"Error: Image file not found at ${image_path}")
+            return None
+        image = cv2.imread(image_path)
+        if image is None:
+            print(f"Error: OpenCV could not read image at ${image_path}")
+        return image
+    
+class ImageSaver:
+    @staticmethod
+    def save(image: np.ndarray, directory: str, filename: str) -> str | None:
+        os.makedirs(directory, exist_ok=True)
+        full_path = str(pathlib.Path(directory) / filename)
+        try:
+            cv2.imwrite(full_path, image)
+            return full_path
+        except Exception as e:
+            print(f"Warning: Could not save image {full_path}: {e}")
+            return None
+        
+class ImageProcessor:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+
+    def resize(self, image: np.ndarray) -> np.ndarray:
+        original_height, original_width = image.shape[:2]
+        if original_width == 0: return image
+
+        desired_width = self.config.DESIRED_IMAGE_WIDTH
+        if original_width < desired_width:
+            scale_factor = desired_width / original_width
+            desired_height = int(original_height * scale_factor)
+        else:
+            aspect_ratio = original_height / original_width
+            desired_height = int(desired_width * aspect_ratio)
+
+        return cv2.resize(image, (desired_width, desired_height), interpolation=cv2.INTER_AREA)
+    
+    def convert_to_hsv(self, bgr_image: np.ndarray) -> np.ndarray:
+        return cv2.cvtColor(bgr_image, cv2.COLOR_BGR2HSV)
+    
+    def apply_gaussian_blur(self, image: np.ndarray) -> np.ndarray:
+        return cv2.GaussianBlur(image, self.config.GAUSSIAN_BLUR_KERNEL_SIZE, 0)
+    
+    def preprocess(self, bgr_image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Resizes, then creates HSV and blurred HSV versions"""
+        resized_bgr = self.resize(bgr_image)
+        hsv_image = self.convert_to_hsv(resized_bgr)
+        blurred_hsv_image = self.apply_gaussian_blur(hsv_image)
+        return self.resize(bgr_image.copy()), blurred_hsv_image
+-------------------- END image_utils.py --------------------
+
+-------------------- visualization_utils.py (path: visualization_utils.py) --------------------
+import cv2
+import numpy as np
+from .config import AnalysisConfig
+
+class DebugVisualizer:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+
+    def draw_contour_approximation(self, image: np.ndarray, contour_approx: np.ndarray | None):
+        if contour_approx is not None:
+            cv2.drawContours(image, [contour_approx], -1, (0, 255, 0), self.config.DEBUG_LINE_THICKNESS)
+
+    def draw_bounding_box(self, image: np.ndarray, bbox: tuple[int, int, int] | None):
+        if bbox:
+            x, y, w, h = bbox
+            cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), self.config.DEBUG_LINE_THICKNESS_STRONG)
+
+    def draw_sticker_rois_and_cells(self, image: np.ndarray, face_bbox: tuple[int, int, int, int] | None, sampling_rois: list[tuple[int, int, int, int]]):
+        if not face_bbox or not sampling_rois: return
+
+        x_f, y_f, w_f, h_f = face_bbox
+        cell_w = w_f / float(self.config.GRID_COLS)
+        cell_h = h_f / float(self.config.GRID_ROWS)
+
+        for r in range(self.config.GRID_ROWS):
+            for c in range(self.config.GRID_COLS):
+                cx1, cy1 = int(x_f + c * cell_w), int(y_f + r * cell_h)
+                cx2, cy2 = int(x_f, (c + 1) * cell_w), int(y_f + (r + 1) * cell_h)
+                cv2.rectangle(image, (cx1, cy1), (cx2, cy2), (0, 255, 0), self.config.DEBUG_LINE_THICKNESS)
+
+        for x_s, y_s, w_s, h_s in sampling_rois:
+            cv2.rectangle(image, (x_s, y_s), (x_s + w_s, y_s + h_s), (0, 0, 255), self.config.DEBUG_LINE_THICKNESS)
+
+    def annotate_sticker_info(self, image: np.ndarray, color_char: str, 
+                              avg_hsv: tuple[int,int,int] | None,
+                              roi_for_placement: tuple[int,int,int,int]):
+        x, y, w, h = roi_for_placement
+        text_pos_char = (x, y - 15 if y > 20 else y + h + 15)
+        text_pos_hsv = (x, y - 5 if y > 10 else y + h + 25)
+
+        # Draw character
+        cv2.putText(image, color_char, text_pos_char, self.config.DEBUG_TEXT_FONT, 
+                    self.config.DEBUG_TEXT_FONT_SCALE_COLOR, self.config.DEBUG_TEXT_COLOR_OUTLINE, 
+                    self.config.DEBUG_LINE_THICKNESS_STRONG, cv2.LINE_AA)
+        cv2.putText(image, color_char, text_pos_char, self.config.DEBUG_TEXT_FONT, 
+                    self.config.DEBUG_TEXT_FONT_SCALE_COLOR, self.config.DEBUG_TEXT_COLOR_FILL, 
+                    self.config.DEBUG_LINE_THICKNESS, cv2.LINE_AA)
+
+        if avg_hsv:
+            h_val, s_val, v_val = avg_hsv
+            hsv_text = f"H{h_val}S{s_val}V{v_val}"
+            cv2.putText(image, hsv_text, text_pos_hsv, self.config.DEBUG_TEXT_FONT, 
+                        self.config.DEBUG_TEXT_FONT_SCALE_HSV, self.config.DEBUG_TEXT_COLOR_OUTLINE, 
+                        self.config.DEBUG_LINE_THICKNESS_STRONG, cv2.LINE_AA)
+            cv2.putText(image, hsv_text, text_pos_hsv, self.config.DEBUG_TEXT_FONT, 
+                        self.config.DEBUG_TEXT_FONT_SCALE_HSV, self.config.DEBUG_TEXT_COLOR_FILL, 
+                        self.config.DEBUG_LINE_THICKNESS, cv2.LINE_AA)
+    
+    def draw_general_message(self, image: np.ndarray, message: str, position: tuple[int,int]=(10,30)):
+        cv2.putText(image, message, position, self.config.DEBUG_TEXT_FONT, 0.6, 
+                    self.config.DEBUG_TEXT_COLOR_OUTLINE, self.config.DEBUG_LINE_THICKNESS_STRONG, cv2.LINE_AA)
+        cv2.putText(image, message, position, self.config.DEBUG_TEXT_FONT, 0.6, 
+                    (0,0,255) if "Error" in message or "Fail" in message else self.config.DEBUG_TEXT_COLOR_FILL, 
+                    self.config.DEBUG_LINE_THICKNESS, cv2.LINE_AA)
+-------------------- END visualization_utils.py --------------------
+
+-------------------- face_analyzer.py (path: face_analyzer.py) --------------------
+import os
+from .config import AnalysisConfig
+from .image_utils import ImageLoader, ImageProcessor, ImageSaver
+from .detection_utils import ContourDetector, GridDefiner
+from .color_analyzer import ColorIdentifier
+from .visualization_utils import DebugVisualizer
+
+class SingleFaceAnalyzer:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+        self.image_loader = ImageLoader()
+        self.image_processor = ImageProcessor(config)
+        self.image_saver = ImageSaver()
+        self.contour_detector = ContourDetector(config)
+        self.grid_definer = GridDefiner(config)
+        self.color_identifier = ColorIdentifier(config)
+        self.visualizer = DebugVisualizer(config)
+
+    def analyze(self, image_path: str) -> dict:
+        """Analyzes a single face image and then returns the data"""
+        image_filename_stem = os.path.splitext(os.path.basename(image_path))[0]
+        debug_image_filename = f"{image_filename_stem}_debug{self.config.IMAGE_EXTENSION}"
+
+        result = {
+            "face_id": image_filename_stem,
+            "grid_colors": [[self.config.UNKNOWN_COLOR_CHAR]*self.config.GRID_COLS for _ in range(self.config.GRID_ROWS)],
+            "center_color_char": self.config.UNKNOWN_COLOR_CHAR,
+            "debug_image_path": None,
+            "error": None
+        }
+
+        original_bgr = self.image_loader.load(image_path)
+        if original_bgr is None:
+            result["error"] = f"Failed to load image: {image_path}"
+            return result
+        
+        debug_bgr_image, blurred_hsv_image = self.image_processor.preprocess(original_bgr)
+
+        contour_approx = self.contour_detector.find_main_face_contour_approx(blurred_hsv_image)
+        self.visualizer.draw_contour_approximation(debug_bgr_image, contour_approx)
+
+        if contour_approx is None:
+            result["error"] = "Could not find main face contour."
+            self.visualizer.draw_general_message(debug_bgr_image, "Error: No Face Contour")
+            result["debug_image_path"] = self.image_saver.save(debug_bgr_image, 
+                                                               self.config.DEBUG_OUTPUT_DIR, 
+                                                               debug_image_filename)
+            return result
+
+        face_bbox = self.grid_definer.get_face_bounding_box(contour_approx)
+        self.visualizer.draw_bounding_box(debug_bgr_image, face_bbox)
+
+        sticker_rois = self.grid_definer.define_sticker_sampling_rois(face_bbox)
+        self.visualizer.draw_sticker_rois_cells(debug_bgr_image, face_bbox, sticker_rois)
+
+        if len(sticker_rois) != self.config.GRID_ROWS * self.config.GRID_COLS:
+            result["error"] = f"Incorrect number of sticker ROIs: {len(sticker_rois)}"
+            self.visualizer.draw_general_message(debug_bgr_image, f"Error: Grid Fail ({len(sticker_rois)} ROIs)")
+            result["debug_image_path"] = self.image_saver.save(debug_bgr_image, 
+                                                               self.config.DEBUG_OUTPUT_DIR, 
+                                                               debug_image_filename)
+            return result
+        
+        flat_color_chars = []
+        for i, roi in enumerate(sticker_rois):
+            avg_hsv = self.color_identifier.extract_average_hsv(blurred_hsv_image, roi)
+            color_char = self.config.UNKNOWN_COLOR_CHAR
+            if avg_hsv:
+                color_char = self.color_identifier.get_color_char_from_hsv(avg_hsv)
+            flat_color_chars.append(color_char)
+            self.visualizer.annotate_sticker_info(debug_bgr_image, color_char, avg_hsv, roi)
+
+        result["grid_colors"] = [flat_color_chars[i:i+self.config.GRID_COLS] for i in range(0, len(flat_color_chars), self.config.GRID_COLS)]
+
+        center_row = self.config.GRID_ROWS // 2
+        center_col = self.config.GRID_COLS // 2
+        if result["grid_colors"] and len(result["grid_colors"]) > center_row and len(result["grid_colors"][center_row]) > center_col:
+            result["center_color_char"] = result["grid_colors"][center_row][center_col]
+
+        result["debug_image_path"] = self.image_saver.save(debug_bgr_image, self.config.DEBUG_OUTPUT_DIR, debug_image_filename)
+        return result
+-------------------- END face_analyzer.py --------------------
+
+-------------------- color_analyzer.py (path: color_analyzer.py) --------------------
+import cv2
+import numpy as np
+from .config import AnalysisConfig
+
+class ColorIdentifier:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+
+    def extract_average_hsv(self, hsv_image: np.ndarray, roi: tuple[int, int, int, int]) -> tuple[int, int, int, int] | None:
+        x, y, w, h = roi
+        if w <= 0 or h <= 0: return None
+        patch = hsv_image[y : y + h, x : x + w]
+        if patch.size == 0: return None
+        return tuple[np.mean(patch, axis=(0,1)).astype(int)]
+    
+    def get_color_char_from_hsv(self, hsv_tuple: tuple[int, int, int]) -> str:
+        h, s, v = hsv_tuple
+        
+        red_low_def = self.config.COLOR_DEFINITIONS["RED_LOW"]
+        red_high_def = self.config.COLOR_DEFINITIONS["RED_HIGH"]
+        if (red_low_def[0][0] <= h <= red_low_def[1][0] or \
+            red_high_def[0][0] <= h <= red_high_def[1][0]) and \
+           (red_low_def[0][1] <= s <= red_low_def[1][1]) and \
+           (red_low_def[0][2] <= v <= red_low_def[1][2]):
+            return red_low_def[2]
+
+        for color_name, (lower, upper, char_code) in self.config.COLOR_DEFINITIONS.items():
+            if color_name.startswith("RED_"): continue 
+            if lower[0] <= h <= upper[0] and \
+               lower[1] <= s <= upper[1] and \
+               lower[2] <= v <= upper[2]:
+                return char_code
+        return self.config.UNKNOWN_COLOR_CHAR
+-------------------- END color_analyzer.py --------------------
+
+-------------------- detection_utils.py (path: detection_utils.py) --------------------
+import cv2
+import numpy as np
+from .config import AnalysisConfig
+
+class ContourDetector:
+    def __init__(self, config:AnalysisConfig):
+        self.config = config
+
+    def _create_segmentation_mask(self, hsv_image: np.ndarray) -> np.ndarray:
+        mask = cv2.inRange(hsv_image, self.config.CUBE_MASK_LOWER_HSV, self.config.CUBE_MASK_UPPER_HSV)
+        kernel = np.ones(self.config.MORPH_KERNEL_SIZE, np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=self.config.MORPH_CLOSE_ITERATIONS)
+        return mask
+    
+    def _find_largest_valid_contour(self, mask: np.ndarray, image_area: int) -> np.ndarray | None:
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours: return None
+        min_contour_area = image_area * self.config.MIN_CONTOUR_AREA_RATIO
+        valid_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_area]
+        return max(valid_contours, key=cv2.contourArea) if valid_contours else None
+    
+    def _approximate_contour(self, contour: np.ndarray) -> np.ndarray:
+        perimeter = cv2.arcLength(contour, True)
+        return cv2.approxPolyDP(contour, self.config.CONTOUR_APPROX_EPSILON_FACTOR * perimeter, True)
+    
+    def find_main_face_contour_approx(self, hsv_image: np.ndarray) -> np.ndarray | None:
+        """Finds and returns the approx polygon of the main face contour"""
+        mask = self._create_segmentation_mask(hsv_image)
+        image_area = hsv_image.shape[0] * hsv_image.shape[1]
+        largest_contour = self._find_largest_valid_contour(mask, image_area)
+        if largest_contour is None:
+            return None
+        return self._approximate_contour(largest_contour)
+    
+class GridDefiner:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+
+    def get_face_bounding_box(self, contour_approx: np.ndarray) -> tuple[int, int, int] | None:
+        if contour_approx is None or len(contour_approx) == 0:
+            return None
+        cv2.boundingRect(contour_approx)
+
+    def define_sticker_sampling_rois(self, face_bbox: tuple[int, int, int, int]) \
+        -> list[tuple[int, int, int, int]]:
+        if face_bbox is None: return []
+
+        x_face, y_face, w_face, h_face = face_bbox
+        rois = []
+        if w_face == 0 or h_face == 0: return []
+
+        cell_w = w_face / float(self.config.GRID_COLS)
+        cell_h = h_face / float(self.config.GRID_ROWS)
+        ratio = self.config.STICKER_SAMPLING_AREA_RATIO
+
+        for i in range(self.config.GRID_ROWS):
+            for j in range(self.config.GRID_COLS):
+                sample_w_val = int(cell_w * ratio)
+                sample_h_val = int(cell_h * ratio)
+
+                center_x_cell = x_face + (j * cell_w) + (cell_w / 2)
+                center_y_cell = y_face + (i * cell_h) + (cell_h / 2)
+
+                x1_sample = int(center_x_cell - sample_w_val / 2)
+                y1_sample = int(center_y_cell - sample_h_val / 2)
+                rois.append((x1_sample, y1_sample, sample_w_val, sample_h_val))
+        return rois
+-------------------- END detection_utils.py --------------------
+
+-------------------- config.py (path: config.py) --------------------
+import numpy as np
+import os
+import cv2
+
+class AnalysisConfig:
+    """Configuration settings for the Rubik's Cube face analysis."""
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    INPUT_IMAGE_DIR = os.path.join(BASE_DIR, "input_images")
+    DEBUG_OUTPUT_DIR = os.path.join(BASE_DIR, "debug_output")
+
+    EXPECTED_FACE_INFO = {
+        "U": {"filename_stem": "face-white", "expected_center_char": "W"},
+        "R": {"filename_stem": "face-green", "expected_center_char": "G"},
+        "F": {"filename_stem": "face-red", "expected_center_char": "R"},
+        "D": {"filename_stem": "face-yellow", "expected_center_char": "Y"},
+        "L": {"filename_stem": "face-blue", "expected_center_char": "B"},
+        "B": {"filename_stem": "face-orange", "expected_center_char": "O"},
+    }
+    IMAGE_EXTENSION = ".png" 
+
+    DESIRED_IMAGE_WIDTH = 600
+    GAUSSIAN_BLUR_KERNEL_SIZE = (7, 7)
+    
+    CUBE_MASK_LOWER_HSV = np.array([0, 30, 30]) 
+    CUBE_MASK_UPPER_HSV = np.array([179, 255, 255])
+    MORPH_KERNEL_SIZE = (5, 5)
+    MORPH_CLOSE_ITERATIONS = 2
+    MIN_CONTOUR_AREA_RATIO = 0.05 
+    CONTOUR_APPROX_EPSILON_FACTOR = 0.035
+
+    GRID_ROWS = 3
+    GRID_COLS = 3
+    STICKER_SAMPLING_AREA_RATIO = 0.5 
+
+    COLOR_DEFINITIONS = {
+        "WHITE":  ([0, 0, 155], [179, 80, 255],   "W"),
+        "YELLOW": ([20, 100, 100], [35, 255, 255], "Y"),
+        "BLUE":   ([90, 80, 70], [130, 255, 255],  "B"),
+        "GREEN":  ([40, 70, 60], [85, 255, 255],   "G"), 
+        "ORANGE": ([5, 100, 100], [19, 255, 255],  "O"),
+        "RED_LOW":([0, 100, 100], [4, 255, 255],   "R"),
+        "RED_HIGH":([170, 100, 100], [179, 255, 255],"R"),
+    }
+    UNKNOWN_COLOR_CHAR = "X"
+
+    DEBUG_TEXT_FONT = cv2.FONT_HERSHEY_SIMPLEX
+    DEBUG_TEXT_FONT_SCALE_COLOR = 0.4
+    DEBUG_TEXT_FONT_SCALE_HSV = 0.3
+    DEBUG_TEXT_COLOR_OUTLINE = (0,0,0)
+    DEBUG_TEXT_COLOR_FILL = (255,255,255)
+    DEBUG_LINE_THICKNESS = 1
+    DEBUG_LINE_THICKNESS_STRONG = 2
+
+    FACE_ORDER_FOR_CUBE_STRING = ["U", "R", "F", "D", "L", "B"]
+-------------------- END config.py --------------------
+
+-------------------- cube_state_builder.py (path: cube_state_builder.py) --------------------
+# rubiks_analyzer/cube_state_builder.py
+from .config import AnalysisConfig
+
+class CubeStateBuilder:
+    def __init__(self, config: AnalysisConfig):
+        self.config = config
+        # Stores face data as { "U": [['W','W','W'],...], "R": [...], ... }
+        self.faces_data = {face_key: None for face_key in config.FACE_ORDER_FOR_CUBE_STRING}
+
+    def add_face_data(self, logical_face_key: str, grid_colors: list[list[str]]):
+        """
+        Adds the 3x3 grid data for a specific logical face (U, R, F, D, L, B).
+        """
+        if logical_face_key not in self.config.FACE_ORDER_FOR_CUBE_STRING:
+            print(f"Warning: Invalid logical face key '{logical_face_key}' provided to CubeStateBuilder.")
+            return
+        
+        if not (len(grid_colors) == self.config.GRID_ROWS and 
+                all(len(row) == self.config.GRID_COLS for row in grid_colors)):
+            print(f"Warning: Invalid grid dimensions for face {logical_face_key}. Filling with UNKNOWN.")
+            self.faces_data[logical_face_key] = [[self.config.UNKNOWN_COLOR_CHAR]*self.config.GRID_COLS 
+                                                 for _ in range(self.config.GRID_ROWS)]
+        else:
+            self.faces_data[logical_face_key] = grid_colors
+            
+    def get_cube_string(self) -> str:
+        """
+        Constructs the 54-character cube state string based on the URFDLB face order.
+        Stickers are read row by row for each face.
+        """
+        cube_string_list = []
+        for face_key in self.config.FACE_ORDER_FOR_CUBE_STRING:
+            grid = self.faces_data.get(face_key)
+            if grid is None: # Face data was not provided or failed
+                print(f"Warning: Data for face '{face_key}' is missing. Filling with UNKNOWNs.")
+                cube_string_list.extend([self.config.UNKNOWN_COLOR_CHAR] * (self.config.GRID_ROWS * self.config.GRID_COLS))
+            else:
+                for row in grid:
+                    cube_string_list.extend(row)
+        
+        return "".join(cube_string_list)
+
+    def set_face_as_unprocessed(self, logical_face_key: str):
+        """Marks a face as unprocessed, filling its grid with UNKNOWN characters."""
+        if logical_face_key in self.faces_data:
+             self.faces_data[logical_face_key] = [[self.config.UNKNOWN_COLOR_CHAR]*self.config.GRID_COLS 
+                                                 for _ in range(self.config.GRID_ROWS)]
+-------------------- END cube_state_builder.py --------------------
+

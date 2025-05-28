@@ -1,0 +1,11 @@
+{
+  "name": "analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "echo \"No linting configured for analyzer yet\"",
+    "analyze-cube": "python3 main.py",
+    "setup": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
+    "clean-debug": "rm -rf ./debug_output/*"
+  }
+}

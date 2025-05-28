@@ -16,6 +16,29 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "analyze-cube": {
+      "dependsOn": [],
+      "inputs": [
+        "main.py",
+        "config.py",
+        "image_utils.py",
+        "detection_utils.py",
+        "color_analyzer.py",
+        "visualization_utils.py",
+        "face_analyzer.py",
+        "cube_state_builder.py",
+        "requirements.txt",
+        "input_images/**"
+      ],
+      "outputs": ["debug_output/**", "stdout"],
+      "cache": true
+    },
+    "setup": {
+      "cache": false
+    },
+    "clean-debug": {
+      "cache": false
     }
   }
 }
