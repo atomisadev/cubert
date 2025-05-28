@@ -38,3 +38,8 @@ yarn-error.log*
 *.pem
 
 *.ico
+
+# python virtual env
+apps/analyzer/.venv
+apps/analyzer/__pycache__/
+apps/analyzer/*.pyc
