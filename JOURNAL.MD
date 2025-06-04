@@ -8,7 +8,7 @@ created_at: "2025-05-26"
 # Day 1&2: Mohit
 Hi everyone, this is where I'll be documenting the software aspect of the Cubert project. My name is Mohit and I'm excited to begin this project. The following content is the barebones software implementation for our project.
 
-# Software Overview
+## Software Overview
 The plan right now for the rubik's cube solver is that the user will upload images of all 6 faces of the cube to an app, and the app will convey this information to either a Raspberry Pi or an ESP32 which will algorithmically solve the rubik's cube. This idea is rooted in the basis that the center blocks of rubik's cubes do not change. To that end, we can ask the user to upload an image of the yellow side, the white side, the green side, etc. After the user uploads this image, we will send it up to AWS Rekognition which will run an image recognition model/CV that we can use to identify the images. I plan on converting this image data using like an AWS Lambda function to a text representation like using JSON or something, and then upload that back to the user. The user will then be uploading this text representation directly to the RPI which will compute the moves to solve the cube. Initially, I had a plan to keep all of the image recognition, etc. running on the RPI but realized how slow this actually is and decided to bring that part up to the cloud. We can also have a 3D Rubik's cube we display on the app for users that don't want to upload images, and instead they can just paint the cube with colors instead of actually taking images.
 
 ## Rough Excalidraw Diagram
