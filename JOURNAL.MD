@@ -19,6 +19,36 @@ I have the starter code setup in the repository. I am currently on vacation, hen
 
 ### Time Spent: 1.5 hours
 
+# Day 1&2: Alex
+
+Hey all, this is where I'll be documenting my progress on the design/fabrication portion of the build. My name is Alex, and I am really excited to get started! 
+
+Below is the rough proposal for the mechanical aspect of the build. This was the first step of the planning and is obviously very vague. But, here it is, to give you some context: 
+
+## Design Process Overview
+
+### Structure
+Lightweight PLA 3D printed see-through web-design cage encompasses the rubik's cube, with a hole in the center of each face for where the servo motors will go.
+There will be an armature piece on each face that directly connects from the servo output to the centerpiece of the rubik's cube face, either completely replacing the center piece or encompassing the center piece
+
+### Unique Adapters
+An adapter will be designed and fabricated for the servo output, as well as an adapter for the centerpiece on each rubik's cube face. Purdue ECE did it by creating new center pieces that mounted to the rubik’s cube and also could mount to the armature.
+
+### Wire Routing
+The cage will have sides to which all the wires will be fastened
+### Potential issue(s)
+The main issue I'm foreseeing with this design is figuring out the adapters and figuring out a way to make the rubik's cube easily removable from the cage.
+
+## V0 Adapter 
+
+The first step for me was to design a temporary adapter that would serve as the connection from the servos that spin each side to the actual face of the Rubik's Cube. I'm currently using the [Purdubiks machine](https://www.youtube.com/watch?v=sXxh6QuY2ew) as inspiration, with the idea being to create an adapter that directly interacts with the interior of the center dot. I'm using a random 3-D model of a speed cube for reference for now, as I don't actually own a Rubik's cube yet, but I'm really hoping that the kind person who modeled the cube modeled it true to life. Enough yap, this is what we're working with currently:
+
+![Screenshot 2025-05-25 163858](https://github.com/user-attachments/assets/a73c0fb4-12dd-4813-bce7-11e36956350d)
+
+Bear in mind, this is just meant to be a proof of concept to me that my idea works. This will become much more refined once more details are finalized. but this is what we have for now. 
+
+### Total Time Spent: 2 Hrs 
+
 # Day 3: Mohit
 
 Day 3 was the day where I started working on coding the vision aspect of the project. As I said earlier, I was initially planning on making it a mobile app using React Native or Flutter. I said that if React Native got annoying, I'd switch to Flutter. I changed my mind again. The final revision of the app will be.... **a Next.js app!**
@@ -39,6 +69,25 @@ I can also probably improve the geometric analysis of the cube. Right now the sy
 The end solution to making everything work around 100% of the time would be to use a machine learning model like YOLO or SSD. This would remove all the tedious steps of contouring everything, making the grid, and the sampling all the ROIs individually. I think it would simplify the pipeline, but it's kinda overkill (idk my mind might change in the future after doing some electronics).
 
 ### Time spent: 3h
+# Day 3
+
+Day 3 was an easier day - I did a few minor things and that's about it. 
+
+## Making my life easier 
+ I created a reference cube (a cube with a hole on each face) to use for modeling purposes, as the imported model was not actually mated together. Here it is: 
+![Screenshot 2025-05-29 204005](https://github.com/user-attachments/assets/30fb55bc-3c6d-44c9-b175-394057e4eebb)
+
+## Assembling the Assembly  
+I also started making the assembly of the cube - servo - adapter. 
+![image](https://github.com/user-attachments/assets/8ab7e622-47e1-4765-acda-60e57a2f94d7)
+
+With a few simple steps, I replicated this subassembly on each side of the reference cube. 
+![image](https://github.com/user-attachments/assets/523c432f-052d-4809-a68b-7369eb552f94)
+
+I also oriented each servo so that the cables would come out facing the front face (or could at least be easily routed towards the front face).
+
+One thing Mohit and I have been worrying about is the adapter blocking the view of the cameras. Still, for now, we decided we won't be worrying about cameras and will require the user to upload pictures of each face of the cube before putting it in the machine. Perhaps in later stages we will incorporate cameras that will detect the color of each dot of each face. 
+### Total Time Spent: 1.5 hr 
 
 # Day 4: Mohit
 Day 4 was an important day. It marks the first day I started designing, and thinking about the electronics for Cubert.
@@ -55,6 +104,35 @@ This is super rough and I'm only including the main components right now. We're 
 
 ### Time Spent: 1.5 hr
 
+# Day 4 
+
+Today was the second big day, as I committed myself to designing the frame today. 
+
+## Making the Frame 
+I didn't really know where to start, so as before, I turned to [Purdue](https://www.youtube.com/watch?v=sXxh6QuY2ew). They obviously design at a much better level than me, but I figured I could still take inspiration from them. I also looked at [Aed Musa's Design](https://www.youtube.com/watch?v=m0bMMALYMYk), and decided to go for a middle of the road approach. This is what I came up with: 
+![image](https://github.com/user-attachments/assets/cde46132-eb48-46d5-9d96-2a636db10d73)
+
+Now, there are several issues with this design, so let's go through them. 
+### 1. It's asymmetrical in a weird way 
+Because of the way the servo is with the shaft being at one end of the overall block, I had to make the servo mounts off-center which makes everything look slightly weird, and also messes with the geometry. No big deal here other than being annoying. 
+### 2. There's no real design for getting the cube in/out 
+This is what I'm most worried about, but I figured for the prototype version I will just print the frame as is and wedge the Rubik's Cube in there. If my design concepts work, then I will redesign the frame to actually be user-friendly.
+### 3. Bad visibility 
+Mohit was complaining hard about this one, so I just got rid of the sides. All better now! 
+![image](https://github.com/user-attachments/assets/37a8fb05-ebbe-42f0-ac41-173191252f40)
+
+### Final Touches 
+I added a base, so the frame has something to stand on, and before I print it (more on that later) I'll be adding bolt/ziptie holes for the servo mounting. 
+
+I'm going to admit, this frame isn't perfect, but it will (hopefully) do exactly what I need it to do, which is being a proof of concept.
+
+This is what the full assembly currently looks like: 
+
+![image](https://github.com/user-attachments/assets/959015d0-4dee-4590-a7bb-d51105670947)
+
+
+### Time Spent : 2 Hrs
+ 
 # Day 5: Mohit
 
 This is the biggest day in our project so far. This is the day I designed out the entire electronics. 
@@ -71,3 +149,13 @@ The main challenge right now is figuring out how we're going to place all the el
 This took way longer than I'd like to admit because to do this first, I had to learn Kicad 💀 
 
 ### Time Spent: 4h
+
+# Day 5
+Today is the day I finally got to printing parts of the project. 
+
+## The Plan and Setup 
+The first thing I wanted to verify were the dimensions of the adapter and make sure it actually interfaced properly with the cube. This was the scariest part, as I was finally going to have to test the trustworthiness of that random CAD model. Also, my current setup is a stock Prusa i3 MK3S+ with SUNLU Black PLA, and I'm using PrusaSlicer to slice all my files. 
+
+
+[still in progress]
+
