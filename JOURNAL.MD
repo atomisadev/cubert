@@ -150,14 +150,36 @@ This took way longer than I'd like to admit because to do this first, I had to l
 
 ### Time Spent: 4h
 
-# Day 5
+# Day 5: Alex
 Today is the day I finally got to printing parts of the project. 
 
 ## The Plan and Setup 
-The first thing I wanted to verify were the dimensions of the adapter and make sure it actually interfaced properly with the cube. This was the scariest part, as I was finally going to have to test the trustworthiness of that random CAD model. Also, my current setup is a stock Prusa i3 MK3S+ with SUNLU Black PLA, and I'm using PrusaSlicer to slice all my files. 
+The first thing I wanted to verify was the dimensions of the adapter and make sure it actually interfaced properly with the cube. This was the scariest part, as I was finally going to have to test the trustworthiness of that random CAD model. Additionally, my current setup is a stock Prusa i3 MK3S+ with SUNLU Black PLA, and I use PrusaSlicer to slice all my files. 
 
 
-[still in progress]
+## Printing the V0 adapter: First attempt
+For this first one, I was foolish enough to think that it was going to work off the first attempt, so I printed it at 100% infill. It took roughly 3-4 hours to print, and was more or less a wasted time - 0-10% infill takes 1-1.5hrs. 
+Here it is: 
+![1000009309](https://github.com/user-attachments/assets/3d6a93b9-3460-4a98-9c29-e46c511e80a4)
+
+## Printing the V0 adapter: Second attempt
+The problem with the previous adapter is that the Rubik's end was too small in width, so for this one, I increased the width by 2mm to exactly match the size of the CAD model (it seems that the CAD model lines up with the GAN cube dimensions). I printed this one only at 5% infill, and it only took 1.5 hrs. As I probably should have expected, this one is about half a millimeter too big: 
+![1000009308](https://github.com/user-attachments/assets/bcc5134f-8bc4-4d4d-92d3-7dfd4ccbcf09)
+
+## Getting smarter: Third attempt 
+This time, instead of printing the entire adapter, I only printed the end bit. I ended up sizing down the width by 0.5 millimeters, and it fit perfectly! 
+
+![1000009312](https://github.com/user-attachments/assets/bce6c2ba-8824-47e2-9810-1134d0f7d649)
+
+## V0 FINALIZED 
+Alright, I finally printed the V0 adapter with the right sizing. I kept the infill low, _just in case_. Nothing to add, it fits perfectly, and is ready for further prototyping! 
+![1000009311](https://github.com/user-attachments/assets/db7be04d-a331-418a-906a-b3b60b0edcfa)
+
+That's a wrap for today, next day will involve more prototyping! 
+
+### Time Spent: 1.5 Hours 
+
+
 
 # Day 6: Mohit
 I decided that it would be much better to add an SSD1306 to the schematics and electronics to make it more visual. It would be nice for the user to see like updates on the actual Cubert machine itself on if their app is connected, and if it's receiving the data and stuff (similar to a printer). So, I added an SSD1306.
