@@ -159,3 +159,9 @@ The first thing I wanted to verify were the dimensions of the adapter and make s
 
 [still in progress]
 
+# Day 6: Mohit
+I decided that it would be much better to add an SSD1306 to the schematics and electronics to make it more visual. It would be nice for the user to see like updates on the actual Cubert machine itself on if their app is connected, and if it's receiving the data and stuff (similar to a printer). So, I added an SSD1306.
+
+![image](https://github.com/user-attachments/assets/c05b9042-1224-43b7-a257-fa54af163b9d)
+
+One main issue is that the Raspberry Pi 3.3V output goes to the logic for the PCA9685 and we need another 3.3V port for the SSD1306. So a solution IRL would be to splice the wire, or we could have a 5V port and have a voltage regulator that steps down 5V to 3.3V for the SSD1306. Everything else is fine, but that's the only big issue.
