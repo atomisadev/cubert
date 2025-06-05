@@ -165,3 +165,5 @@ I decided that it would be much better to add an SSD1306 to the schematics and e
 ![image](https://github.com/user-attachments/assets/c05b9042-1224-43b7-a257-fa54af163b9d)
 
 One main issue is that the Raspberry Pi 3.3V output goes to the logic for the PCA9685 and we need another 3.3V port for the SSD1306. So a solution IRL would be to splice the wire, or we could have a 5V port and have a voltage regulator that steps down 5V to 3.3V for the SSD1306. Everything else is fine, but that's the only big issue.
+
+### Time spent: 0.5h
