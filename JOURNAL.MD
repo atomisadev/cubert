@@ -5,6 +5,10 @@ description: "A fully custom Rubik's cube solver!"
 created_at: "2025-05-26"
 ---
 
+### Total Time Spent
+- Mohit: 10h
+- Alex: 8.5h
+
 # Day 1&2: Mohit
 Hi everyone, this is where I'll be documenting the software aspect of the Cubert project. My name is Mohit and I'm excited to begin this project. The following content is the barebones software implementation for our project.
 
