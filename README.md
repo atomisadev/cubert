@@ -5,7 +5,7 @@ Cubert is a machine that automatically solves a 3x3x3 Rubik's Cube. It uses a Ra
 We built this project to challenge ourselves and also dive deeper into electronics and mechanical design. I think that this project is an amazing learning experience that combines a lot of important aspects of engineering in the modern day, such as Python, CV, power and electronics, and also 3D printing. Overall, I believe we will have an amazing time building this project, whilst testing our ability to problem solve and also bonding together as friends.
 
 > [!NOTE]  
-> All of the CAD has been designed in Onshape and can be found inside the repository as a STEP file.
+> The CAD model can be found inside the root directory in the repository as STEP files.
 
 ## Project Images
 ![image](https://github.com/user-attachments/assets/9c85e303-2e4a-494e-8908-bf09422262b0)
