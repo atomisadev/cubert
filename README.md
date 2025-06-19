@@ -8,9 +8,9 @@ We built this project to challenge ourselves and also dive deeper into electroni
 > The CAD model can be found inside the root directory in the repository as STEP files.
 
 ## Project Images
-![image](https://github.com/user-attachments/assets/9c85e303-2e4a-494e-8908-bf09422262b0)
-![image](https://github.com/user-attachments/assets/770aa358-c69f-4027-ad1c-e64907dd7c8a)
-![image](https://github.com/user-attachments/assets/9b6491cd-c4f5-4758-be59-ac9d7285e247)
+<img width="767" alt="image" src="https://github.com/user-attachments/assets/3bf44b48-b94a-485b-af59-d8d64e875967" />
+<img width="820" alt="image" src="https://github.com/user-attachments/assets/7ea0bedc-5e83-4162-b62c-769e89d8044d" />
+
 ![image](https://github.com/user-attachments/assets/7d0ee4e9-de9f-47c2-9111-8b9da86d31e0)
 
 
