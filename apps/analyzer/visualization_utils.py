@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from .config import AnalysisConfig
+from config import AnalysisConfig
 
 class DebugVisualizer:
     def __init__(self, config: AnalysisConfig):
