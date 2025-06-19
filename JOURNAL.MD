@@ -193,3 +193,36 @@ I decided that it would be much better to add an SSD1306 to the schematics and e
 One main issue is that the Raspberry Pi 3.3V output goes to the logic for the PCA9685 and we need another 3.3V port for the SSD1306. So a solution IRL would be to splice the wire, or we could have a 5V port and have a voltage regulator that steps down 5V to 3.3V for the SSD1306. Everything else is fine, but that's the only big issue.
 
 ### Time spent: 0.5h
+
+# Day 6: Alex 
+
+## Frame Redesign
+
+I was told that the frame V0 is bad. Unfortunately, the haters are correct. So, I created Frame V1. 
+
+To start, I realized that making the entire frame in a part studio is a bad idea, so I made it in an assembly instead. The biggest issue with V0 is that the entire frame was one piece, so I tried to make sure the frame was made of several individual parts. I retained the same type of design, using the same strips for each side: 
+
+![image](https://github.com/user-attachments/assets/cd3d2d59-1f5b-48b4-8ec0-468f71930079)
+
+Next, I needed to figure out a way to bind all the sides together. I was stumped for some time, but then I realized that I could just use a 'cap' on the top and bottom that would keep everything secure.
+
+![image](https://github.com/user-attachments/assets/e442ae73-4065-4088-bbf4-a4dbee84a921)
+
+I made the top cap a little bit shorter for visibility purposes. Next, I needed to make a stand to hold the machine. Looking at the stool in my room, I was inspired to make a stool: 
+
+![image](https://github.com/user-attachments/assets/7172ad8c-3c71-4912-adf2-c094f70ad64d)
+
+Anyway, this is the final V1 assembly. I think this one will actually work. 
+
+![image](https://github.com/user-attachments/assets/c47c591f-9bb9-4bc4-a47c-bb987d83775d)
+
+
+Some notes:
+* This version has accurate mounting holes
+* I included all fasteners 
+* electronics will be mounted on the bottom face of the machine, around the servo. 
+
+### Time Spent: 3 Hours 
+
+
+
